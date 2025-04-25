@@ -2,9 +2,10 @@ import requests
 from datetime import datetime, timedelta
 
 class GetBadmintonPlace:
-    def __init__(self):
+    def __init__(self,token):
         self.getAllSessionIdRequestUrl = "https://zhcg.swjtu.edu.cn/onesports-gateway/wechat-c/api/wechat/memberBookController/weChatSessionsList"
         self.sendReserveRequestUrl = "https://zhcg.swjtu.edu.cn/onesports-gateway/business-service/orders/weChatSessionsReserve"
+        self.token = token
     def getNextDayTimestamp(self):
         """
         获取当前日期第二天的毫秒时间戳
@@ -17,7 +18,7 @@ class GetBadmintonPlace:
         timestamp_ms = int(next_day.timestamp() * 1000)
         return timestamp_ms
 
-    def getAllSessionIdRequest(self,fieldId,token):
+    def getAllSessionIdRequest(self,fieldId):
         """
         获取sessionId
         """
@@ -37,8 +38,8 @@ class GetBadmintonPlace:
         # 请求头
         headers = {
             'Content-Type': 'application/json',
-            'X-UserToken': token,  # token
-            'token': token
+            'X-UserToken': self.token,  # token
+            'token': self.token
         }
 
         # 发送 POST 请求
@@ -46,7 +47,8 @@ class GetBadmintonPlace:
 
         # 打印响应状态码和内容
         print(f"[{datetime.now()}] Status Code:", response.status_code)
-        print("[Response Body]:", response.json())
+        # print("[Response Body]:", response.json())
+        return response
 
 
     def getUniqueSessionId(self,fieldId, targetDate, startTime, endTime, placeName):
@@ -65,19 +67,19 @@ class GetBadmintonPlace:
         # 假设返回的是 JSON 数据
         sessions_data = response.json()
 
-        # 遍历场次数据，筛选符合条件的场次
-        for session in sessions_data:
-            if (session.get("openDate") == targetDate and
-                session.get("openStartTime") == startTime and
-                session.get("openEndTime") == endTime and
-                session.get("placeName") == placeName and
-                session.get("sessionsStatus") == "NO_RESERVED"):
-                return session.get("id")  # 返回符合条件的场次 ID
+        # 遍历嵌套列表结构
+        for outer_list in sessions_data:  # 外层列表
+            for session in outer_list:  # 内层列表中的字典
+                if (session.get("openDate") == targetDate and
+                    session.get("openStartTime") == startTime and
+                    session.get("openEndTime") == endTime and
+                    session.get("placeName") == placeName and
+                    session.get("sessionsStatus") == "NO_RESERVED"):
+                    return session.get("id")  # 返回符合条件的场次 ID
 
-        # 如果没有找到符合条件的场次，返回 None
         return None
 
-    def sendReserveRequest(self, fieldId, targetDate, startTime, endTime, placeName,token):
+    def sendReserveRequest(self, fieldId, targetDate, startTime, endTime, placeName):
         # 请求地址
         url = self.sendReserveRequestUrl
 
@@ -102,8 +104,8 @@ class GetBadmintonPlace:
         # 请求头
         headers = {
             'Content-Type': 'application/json',
-            'X-UserToken': token,
-            'token': token
+            'X-UserToken': self.token,
+            'token': self.token
         }
 
         # 发送 POST 请求
@@ -115,7 +117,22 @@ class GetBadmintonPlace:
 
 
 
-
 if __name__ == "__main__":
-    pass
-    # af01a19d-614d-4aea-b8e7-5403cbadc0d6
+# 创建 GetBadmintonPlace 实例
+    badminton_place = GetBadmintonPlace($token)
+
+    # 测试参数
+    fieldId = 1462312540799516672  # 示例场地 ID
+    targetDate = "2025-04-26"       # 目标日期
+    startTime = "08:00:00"          # 开始时间
+    endTime = "09:00:00"            # 结束时间
+    placeName = "1号羽毛球" # 场地名称
+
+    # 调用 getUniqueSessionId 方法
+    unique_session_id = badminton_place.getUniqueSessionId(fieldId, targetDate, startTime, endTime, placeName)
+
+    # 打印结果
+    if unique_session_id:
+        print(f"找到符合条件的场次 ID: {unique_session_id}")
+    else:
+        print("未找到符合条件的场次")

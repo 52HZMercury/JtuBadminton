@@ -12,9 +12,9 @@ def scheduleRun(fieldId, targetDate, startTime, endTime, placeName, token):
     schedule.every().friday.at("22:30:03").do(badminton_place.sendReserveRequest, fieldId, targetDate, startTime, endTime, placeName, token)
 
 if __name__ == "__main__":
-    # 九里 1462312540799516672 犀浦
+    # 九里 1462312540799516672 犀浦 1462412671863504896
     fieldId = "1462312540799516672"
-    targetDate = "2023-10-15"
+    targetDate = "2025-04-26"
     startTime = "20:00:00"
     endTime = "21:00:00"
     placeName = "5号羽毛球"
