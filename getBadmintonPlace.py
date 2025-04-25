@@ -8,12 +8,12 @@ class GetBadmintonPlace:
         self.token = token
     def getNextDayTimestamp(self):
         """
-        获取当前日期第二天的毫秒时间戳
+        获取当前日期后天的毫秒时间戳
         """
         # 获取当前时间
         now = datetime.now()
-        # 计算第二天的日期
-        next_day = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        # 计算第三天的日期
+        next_day = (now + timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
         # 转换为毫秒时间戳
         timestamp_ms = int(next_day.timestamp() * 1000)
         return timestamp_ms
@@ -46,7 +46,7 @@ class GetBadmintonPlace:
         response = requests.post(url, json=payload, headers=headers, verify=False)
 
         # 打印响应状态码和内容
-        print(f"[{datetime.now()}] Status Code:", response.status_code)
+        print(f"[{datetime.now()}] 获取全部场次 SessionId, Status Code:", response.status_code)
         # print("[Response Body]:", response.json())
         return response
 
@@ -75,8 +75,10 @@ class GetBadmintonPlace:
                     session.get("openEndTime") == endTime and
                     session.get("placeName") == placeName and
                     session.get("sessionsStatus") == "NO_RESERVED"):
+                    print(f"[{datetime.now()}] 获取到符合条件的场次:", session)
                     return session.get("id")  # 返回符合条件的场次 ID
 
+        print(f"[{datetime.now()}] 未获取获取到符合条件的场次")
         return None
 
     def sendReserveRequest(self, fieldId, targetDate, startTime, endTime, placeName):
@@ -86,13 +88,17 @@ class GetBadmintonPlace:
         # 动态获取 orderUseDate
         order_use_date = self.getNextDayTimestamp()
         sessionId = self.getUniqueSessionId(fieldId, targetDate, startTime, endTime, placeName)
+
+        if sessionId is None:
+            return "未获取到符合条件的场次"
+
         fieldName =  "九里羽毛球1-6号" if fieldId == 1462312540799516672 else "犀浦室内羽毛球馆"
         # 请求体内容
         payload = {
             "number": 2,
             "orderUseDate": order_use_date,  # 日期时间戳
             "requestsList": [{
-                "sessionsId": sessionId  # 场次时间id
+                "sessionsId": sessionId  # 场次id
             }],
             "fieldName": fieldName,
             "fieldId": fieldId,  # 场地id(九里羽毛球1-6号，犀浦室内羽毛球馆)
@@ -112,27 +118,25 @@ class GetBadmintonPlace:
         response = requests.post(url, json=payload, headers=headers, verify=False)
 
         # 打印响应状态码和内容
-        print(f"[{datetime.now()}] Status Code:", response.status_code)
-        print("[Response Body]:", response.json())
+        print(f"[{datetime.now()}] 预定场次 Status Code:{response.status_code}, 预定信息:{response.json()}", )
+        # print("[Response Body]:", response.json())
+        return response
 
 
 
 if __name__ == "__main__":
 # 创建 GetBadmintonPlace 实例
-    badminton_place = GetBadmintonPlace($token)
+    badminton_place = GetBadmintonPlace($TOKEN_HERE)
 
     # 测试参数
-    fieldId = 1462312540799516672  # 示例场地 ID
-    targetDate = "2025-04-26"       # 目标日期
-    startTime = "08:00:00"          # 开始时间
-    endTime = "09:00:00"            # 结束时间
-    placeName = "1号羽毛球" # 场地名称
+    fieldId = 1462312540799516672   # 示例场地 ID
+    targetDate = "2025-04-27"       # 目标日期
+    startTime = "18:00:00"          # 开始时间
+    endTime = "19:00:00"            # 结束时间
+    placeName = "4号羽毛球"         # 场地名称
 
     # 调用 getUniqueSessionId 方法
-    unique_session_id = badminton_place.getUniqueSessionId(fieldId, targetDate, startTime, endTime, placeName)
+    status_code = badminton_place.sendReserveRequest(fieldId, targetDate, startTime, endTime, placeName)
 
     # 打印结果
-    if unique_session_id:
-        print(f"找到符合条件的场次 ID: {unique_session_id}")
-    else:
-        print("未找到符合条件的场次")
+    print(f"预定成功, status_code: {status_code}")
