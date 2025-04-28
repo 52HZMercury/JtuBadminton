@@ -15,7 +15,7 @@ class GetBadmintonPlace:
         # 获取当前时间
         now = datetime.now()
         # 计算第三天的日期
-        afterDay = (now + timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
+        afterDay = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
         # 转换为毫秒时间戳
         timestamp_ms = int(afterDay.timestamp() * 1000)
         return timestamp_ms
@@ -87,7 +87,7 @@ class GetBadmintonPlace:
         url = self.sendReserveRequestUrl
 
         # 动态获取 orderUseDate
-        order_use_date = self.getNextDayTimestamp()
+        order_use_date = self.getAfterDayTimestamp()
         sessionId = self.getUniqueSessionId(fieldId, targetDate, startTime, endTime, placeName)
 
         if sessionId is None:
@@ -119,7 +119,7 @@ class GetBadmintonPlace:
         response = requests.post(url, json=payload, headers=headers, verify=False)
 
         # 打印响应状态码和内容
-        print(f"[{datetime.now()}] 预定场次 Status Code:{response.status_code}, 预定信息:{response.json()}", )
+        print(f"[{datetime.now()}] 预定指定场次 Status Code:{response.status_code}, 预定信息:{response.json()}", )
         # print("[Response Body]:", response.json())
         return response
 
@@ -129,19 +129,13 @@ if __name__ == "__main__":
     # 创建 GetBadmintonPlace 实例
     badminton_place = GetBadmintonPlace("$token$")
 
-    # 测试新增方法：获取服务器时间
-    server_time = badminton_place.getServerTimeFromHeader()
-    print(f"服务器时间: {server_time}")
-
     # 测试参数
-    fieldId = 1462312540799516672   # 示例场地 ID
-    targetDate = "2025-04-27"       # 目标日期
-    startTime = "18:00:00"          # 开始时间
-    endTime = "19:00:00"            # 结束时间
+    fieldId = 1462412671863504896   # 示例场地 ID
+    targetDate = "2025-04-29"       # 目标日期
+    startTime = "19:00:00"          # 开始时间
+    endTime = "20:00:00"            # 结束时间
     placeName = "4号羽毛球"         # 场地名称
 
     # 调用 getUniqueSessionId 方法
-    status_code = badminton_place.sendReserveRequest(fieldId, targetDate, startTime, endTime, placeName)
+    badminton_place.sendReserveRequest(fieldId, targetDate, startTime, endTime, placeName)
 
-    # 打印结果
-    print(f"预定成功, status_code: {status_code}")
