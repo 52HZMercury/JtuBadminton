@@ -6,16 +6,18 @@ class GetBadmintonPlace:
         self.getAllSessionIdRequestUrl = "https://zhcg.swjtu.edu.cn/onesports-gateway/wechat-c/api/wechat/memberBookController/weChatSessionsList"
         self.sendReserveRequestUrl = "https://zhcg.swjtu.edu.cn/onesports-gateway/business-service/orders/weChatSessionsReserve"
         self.token = token
-    def getNextDayTimestamp(self):
+
+
+    def getAfterDayTimestamp(self):
         """
         获取当前日期后天的毫秒时间戳
         """
         # 获取当前时间
         now = datetime.now()
         # 计算第三天的日期
-        next_day = (now + timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
+        afterDay = (now + timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
         # 转换为毫秒时间戳
-        timestamp_ms = int(next_day.timestamp() * 1000)
+        timestamp_ms = int(afterDay.timestamp() * 1000)
         return timestamp_ms
 
     def getAllSessionIdRequest(self,fieldId):
@@ -24,7 +26,7 @@ class GetBadmintonPlace:
         """
         url = self.getAllSessionIdRequestUrl
 
-        search_date_timestamp = self.getNextDayTimestamp()  # 获取时间戳
+        search_date_timestamp = self.getAfterDayTimestamp()  # 获取时间戳
         search_date = datetime.fromtimestamp(search_date_timestamp / 1000).strftime('%Y-%m-%d')  # 转换为日期字符串
 
         payload = {
@@ -42,7 +44,6 @@ class GetBadmintonPlace:
             'token': self.token
         }
 
-        # 发送 POST 请求
         response = requests.post(url, json=payload, headers=headers, verify=False)
 
         # 打印响应状态码和内容
@@ -125,8 +126,12 @@ class GetBadmintonPlace:
 
 
 if __name__ == "__main__":
-# 创建 GetBadmintonPlace 实例
-    badminton_place = GetBadmintonPlace($TOKEN_HERE)
+    # 创建 GetBadmintonPlace 实例
+    badminton_place = GetBadmintonPlace("$token$")
+
+    # 测试新增方法：获取服务器时间
+    server_time = badminton_place.getServerTimeFromHeader()
+    print(f"服务器时间: {server_time}")
 
     # 测试参数
     fieldId = 1462312540799516672   # 示例场地 ID
