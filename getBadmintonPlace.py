@@ -5,8 +5,8 @@ class GetBadmintonPlace:
     def __init__(self,token):
         self.getAllSessionIdRequestUrl = "https://zhcg.swjtu.edu.cn/onesports-gateway/wechat-c/api/wechat/memberBookController/weChatSessionsList"
         self.sendReserveRequestUrl = "https://zhcg.swjtu.edu.cn/onesports-gateway/business-service/orders/weChatSessionsReserve"
+        self.sessionId = ""
         self.token = token
-
 
     def getAfterDayTimestamp(self):
         """
@@ -79,7 +79,7 @@ class GetBadmintonPlace:
                     print(f"[{datetime.now()}] 获取到符合条件的场次:", session)
                     return session.get("id")  # 返回符合条件的场次 ID
 
-        print(f"[{datetime.now()}] 未获取获取到符合条件的场次")
+        print(f"[{datetime.now()}] 未获取到符合条件的场次")
         return None
 
     def sendReserveRequest(self, fieldId, targetDate, startTime, endTime, placeName):
@@ -88,40 +88,41 @@ class GetBadmintonPlace:
 
         # 动态获取 orderUseDate
         order_use_date = self.getAfterDayTimestamp()
-        sessionId = self.getUniqueSessionId(fieldId, targetDate, startTime, endTime, placeName)
+        if(self.sessionId == ""):
+            sessionIdUnique = self.getUniqueSessionId(fieldId, targetDate, startTime, endTime, placeName)
+            if sessionIdUnique is None:
+                return "未获取到符合条件的场次"
+            self.sessionId = sessionIdUnique
+        else:
+            fieldName =  "九里羽毛球1-6号" if fieldId == 1462312540799516672 else "犀浦室内羽毛球馆"
+            # 请求体内容
+            payload = {
+                "number": 2,
+                "orderUseDate": order_use_date,  # 日期时间戳
+                "requestsList": [{
+                    "sessionsId": self.sessionId  # 场次id
+                }],
+                "fieldName": fieldName,
+                "fieldId": fieldId,  # 场地id(九里羽毛球1-6号，犀浦室内羽毛球馆)
+                "siteName": placeName,
+                "sportTypeName": "羽毛球",
+                "sportTypeId": "2"
+            }
 
-        if sessionId is None:
-            return "未获取到符合条件的场次"
+            # 请求头
+            headers = {
+                'Content-Type': 'application/json',
+                'X-UserToken': self.token,
+                'token': self.token
+            }
 
-        fieldName =  "九里羽毛球1-6号" if fieldId == 1462312540799516672 else "犀浦室内羽毛球馆"
-        # 请求体内容
-        payload = {
-            "number": 2,
-            "orderUseDate": order_use_date,  # 日期时间戳
-            "requestsList": [{
-                "sessionsId": sessionId  # 场次id
-            }],
-            "fieldName": fieldName,
-            "fieldId": fieldId,  # 场地id(九里羽毛球1-6号，犀浦室内羽毛球馆)
-            "siteName": placeName,
-            "sportTypeName": "羽毛球",
-            "sportTypeId": "2"
-        }
+            # 发送 POST 请求
+            response = requests.post(url, json=payload, headers=headers, verify=False)
 
-        # 请求头
-        headers = {
-            'Content-Type': 'application/json',
-            'X-UserToken': self.token,
-            'token': self.token
-        }
-
-        # 发送 POST 请求
-        response = requests.post(url, json=payload, headers=headers, verify=False)
-
-        # 打印响应状态码和内容
-        print(f"[{datetime.now()}] 预定指定场次 Status Code:{response.status_code}, 预定信息:{response.json()}", )
-        # print("[Response Body]:", response.json())
-        return response
+            # 打印响应状态码和内容
+            print(f"[{datetime.now()}] 预定指定场次 Status Code:{response.status_code}, 预定信息:{response.json()}", )
+            # print("[Response Body]:", response.json())
+            return response
 
 
 

@@ -1,4 +1,3 @@
-# scheduleRun.py
 import schedule
 import time
 from datetime import datetime, timedelta
@@ -26,18 +25,19 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
         """
         # 创建 GetBadmintonPlace 实例
         badminton_place = GetBadmintonPlace(token)
-        response = badminton_place.sendReserveRequest(fieldId, targetDate, startTime, endTime, placeName)
-        # 推送消息
-        if isinstance(response, str):
-            sendNotice(f"预约失败：{response}")
-        elif hasattr(response, 'status_code'):
-            response_code = response.status_code
-            if response_code == 200:
+        flag = False
+        for _ in range(150):
+            response = badminton_place.sendReserveRequest(fieldId, targetDate, startTime, endTime, placeName)
+            if response.status_code == 200:
+                flag = True
+                print(f"[{datetime.now()}] 预约成功，等待付款。场地：{placeName}，时间：{startTime}-{endTime}")
                 sendNotice(f"预约成功，等待付款。场地：{placeName}，时间：{startTime}-{endTime}")
-            else:
-                sendNotice(f"预约失败，状态码：{response_code}")
-        else:
-            sendNotice("预约失败，未知错误")
+                break
+            print(f"[{datetime.now()}] 预约失败，正在重试。场地：{placeName}，时间：{startTime}-{endTime}")
+            time.sleep(1)
+        # 推送消息
+        if not flag:
+            sendNotice(f"预约失败：{response}")
 
 
     # 调用 syncTime 计算时间差值
@@ -45,8 +45,8 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
     if serverTime:
         timeDiff = calculateTimeDiff(serverTime)
         print(f"[{datetime.now()}] 当前本地时间与服务器时间相差 {timeDiff} 秒")
-        # 将时间差值加到原定时间 22:30:02(服务器时间) 上
-        adjusted_time = (datetime.strptime("22:30:02", "%H:%M:%S") + timedelta(seconds=timeDiff)).strftime("%H:%M:%S")
+        # 将时间差值加到原定时间 22:30:01(服务器时间) 上
+        adjusted_time = (datetime.strptime("22:30:01", "%H:%M:%S") + timedelta(seconds=timeDiff)).strftime("%H:%M:%S")
         print(f"[{datetime.now()}] 调整后的时间为 {adjusted_time}")
 
         for weekday in weekdays:
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     placeName = "5号羽毛球"
     token = "$token$"
     # 抢星期几的场地，1代表周一，7代表周日
-    weekdays = [5, 6]
+    weekdays = [3, 5, 6]
 
     scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, token)
 

@@ -14,7 +14,7 @@ def calculateTimeDiff(serverTime):
     return timeDiff
 def convert2gmt8(serverTime):
     """
-    将服务器时间（GMT）转换为北京时间（GMT+8）
+    将服务器时间(GMT)转换为北京时间(GMT+8)
     """
     # 解析服务器时间为 datetime 对象
     gmt_time = datetime.strptime(serverTime, '%a, %d %b %Y %H:%M:%S GMT')
