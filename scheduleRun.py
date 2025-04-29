@@ -26,15 +26,18 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
         # 创建 GetBadmintonPlace 实例
         badminton_place = GetBadmintonPlace(token)
         flag = False
-        for _ in range(150):
+        for _ in range(200):
             response = badminton_place.sendReserveRequest(fieldId, targetDate, startTime, endTime, placeName)
-            if response.status_code == 200:
-                flag = True
-                print(f"[{datetime.now()}] 预约成功，等待付款。场地：{placeName}，时间：{startTime}-{endTime}")
-                sendNotice(f"预约成功，等待付款。场地：{placeName}，时间：{startTime}-{endTime}")
-                break
-            print(f"[{datetime.now()}] 预约失败，正在重试。场地：{placeName}，时间：{startTime}-{endTime}")
-            time.sleep(1)
+            if isinstance(response, str):
+                print(f"[{datetime.now()}] 预约失败，正在重试。场地：{placeName}，时间：{startTime}-{endTime}")
+            elif hasattr(response, 'status_code'):
+                response_code = response.status_code
+                if response_code == 200:
+                    flag = True
+                    print(f"[{datetime.now()}] 预约成功，等待付款。场地：{placeName}，时间：{startTime}-{endTime}")
+                    sendNotice(f"预约成功，等待付款。场地：{placeName}，时间：{startTime}-{endTime}")
+                    break
+                time.sleep(1)
         # 推送消息
         if not flag:
             sendNotice(f"预约失败：{response}")
@@ -74,7 +77,7 @@ if __name__ == "__main__":
     startTime = "20:00:00"
     endTime = "21:00:00"
     placeName = "5号羽毛球"
-    token = "$token$"
+    token = "af01a19d-614d-4aea-b8e7-5403cbadc0d6"
     # 抢星期几的场地，1代表周一，7代表周日
     weekdays = [3, 5, 6]
 
