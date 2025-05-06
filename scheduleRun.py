@@ -35,11 +35,14 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
                 if response_code == 200:
                     flag = True
                     print(f"[{datetime.now()}] 预约成功，等待付款。场地：{placeName}，时间：{startTime}-{endTime}")
-                    sendNotice(f"预约成功，等待付款。场地：{placeName}，时间：{startTime}-{endTime}")
                     break
+                else:
+                    print(f"[{datetime.now()}] 预约失败，正在重试。场地：{placeName}，时间：{startTime}-{endTime}")
                 time.sleep(1)
         # 推送消息
-        if not flag:
+        if flag:
+            sendNotice(f"预约成功，等待付款。场地：{placeName}，时间：{startTime}-{endTime}")
+        else:
             sendNotice(f"预约失败：{response}")
 
 
@@ -49,7 +52,7 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
         timeDiff = calculateTimeDiff(serverTime)
         print(f"[{datetime.now()}] 当前本地时间与服务器时间相差 {timeDiff} 秒")
         # 将时间差值加到原定时间 22:30:01(服务器时间) 上
-        adjusted_time = (datetime.strptime("22:30:01", "%H:%M:%S") + timedelta(seconds=timeDiff)).strftime("%H:%M:%S")
+        adjusted_time = (datetime.strptime("22:30:00", "%H:%M:%S") + timedelta(seconds=timeDiff)).strftime("%H:%M:%S")
         print(f"[{datetime.now()}] 调整后的时间为 {adjusted_time}")
 
         for weekday in weekdays:
@@ -77,9 +80,9 @@ if __name__ == "__main__":
     startTime = "20:00:00"
     endTime = "21:00:00"
     placeName = "5号羽毛球"
-    token = "af01a19d-614d-4aea-b8e7-5403cbadc0d6"
+    token = "$token$"
     # 抢星期几的场地，1代表周一，7代表周日
-    weekdays = [3, 5, 6]
+    weekdays = [3, 4, 5, 6]
 
     scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, token)
 
