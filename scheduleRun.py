@@ -10,18 +10,22 @@ from getAfterDay import getAfterDay
 def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, token):
 
     print(f"[{datetime.now()}] 等待执行任务中...")
+    sessionId = ""
+    def task1():
+        print(f"[{datetime.now()}] 开始执行获取场次任务...")
 
-    def task():
-        """
-        定时任务的具体逻辑
-        """
-        print(f"[{datetime.now()}] 开始执行任务...")
+        nonlocal sessionId
+        badminton_place = GetBadmintonPlace(token)
+        sessionId = badminton_place.getUniqueSessionId(fieldId, targetDate, startTime, endTime, placeName)
 
-        # 创建 GetBadmintonPlace 实例
+    def task2():
+        print(f"[{datetime.now()}] 开始执行预定任务...")
+
+        nonlocal sessionId
         badminton_place = GetBadmintonPlace(token)
         flag = False
-        for count in range(200):
-            response = badminton_place.sendReserveRequest(fieldId, targetDate, startTime, endTime, placeName)
+        for count in range(20):
+            response = badminton_place.sendReserveRequest(sessionId, fieldId, targetDate, startTime, endTime, placeName)
             # 取出回复里面的状态码
             response_json = response.json()
             response_code = response_json.get('code')
@@ -31,9 +35,9 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
                 print(f"[{datetime.now()}] 预约成功，等待付款。场地：{placeName}，时间：{targetDate} {startTime}-{endTime}")
                 break
             else:
-                print(f"[{datetime.now()}] 预约失败，回复状态码:{response_code}, 正在进行第{count}次重试。场地：{placeName}，时间：{targetDate} {startTime}-{endTime}")
+                print(f"[{datetime.now()}] 预约失败，正在进行第{count}次重试。场地：{placeName}，时间：{targetDate} {startTime}-{endTime}")
 
-            time.sleep(1.5)
+            time.sleep(2)
 
         # 推送消息
         if flag:
@@ -51,12 +55,14 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
     #     adjusted_time = (datetime.strptime("15:47:00", "%H:%M:%S") + timedelta(seconds=timeDiff)).strftime("%H:%M:%S")
     #     print(f"[{datetime.now()}] 调整后的时间为 {adjusted_time}")
 
-    # 考虑到脚本的运行时间，所以时间要提前1秒
-    adjusted_time = (datetime.strptime("22:30:00", "%H:%M:%S") + timedelta(seconds=-1)).strftime("%H:%M:%S")
-    print(f"[{datetime.now()}] 调整后的时间为 {adjusted_time}")
+    id_time = (datetime.strptime("22:25:00", "%H:%M:%S") + timedelta(seconds=0)).strftime("%H:%M:%S")
+    print(f"[{datetime.now()}] 获取场次任务调整后的时间为 {id_time}")
+
+    reserve_time = (datetime.strptime("22:30:00", "%H:%M:%S") + timedelta(seconds=0)).strftime("%H:%M:%S")
+    print(f"[{datetime.now()}] 预定场次任务调整后的时间为 {reserve_time}")
 
     for weekday in weekdays:
-        # 提前两天抢
+        # 提前两天
         weekday = (int(weekday) - 3) % 7
         weekday_mapping = {
             0: schedule.every().monday,
@@ -68,7 +74,22 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
             6: schedule.every().sunday
         }
         if weekday in weekday_mapping:
-            weekday_mapping[weekday].at(adjusted_time).do(task)
+            weekday_mapping[weekday].at(id_time).do(task1)
+
+    for weekday in weekdays:
+        # 提前两天
+        weekday = (int(weekday) - 3) % 7
+        weekday_mapping = {
+            0: schedule.every().monday,
+            1: schedule.every().tuesday,
+            2: schedule.every().wednesday,
+            3: schedule.every().thursday,
+            4: schedule.every().friday,
+            5: schedule.every().saturday,
+            6: schedule.every().sunday
+        }
+        if weekday in weekday_mapping:
+            weekday_mapping[weekday].at(reserve_time).do(task2)
 
 
 
@@ -88,4 +109,4 @@ if __name__ == "__main__":
 
     while True:
         schedule.run_pending()
-        time.sleep(0.7)
+        time.sleep(0.5)

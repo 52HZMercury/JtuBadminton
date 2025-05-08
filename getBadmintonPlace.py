@@ -8,7 +8,6 @@ class GetBadmintonPlace:
     def __init__(self,token):
         self.getAllSessionIdRequestUrl = "https://zhcg.swjtu.edu.cn/onesports-gateway/wechat-c/api/wechat/memberBookController/weChatSessionsList"
         self.sendReserveRequestUrl = "https://zhcg.swjtu.edu.cn/onesports-gateway/business-service/orders/weChatSessionsReserve"
-        self.sessionId = ""
         self.token = token
 
     def getAllSessionIdRequest(self,fieldId):
@@ -72,33 +71,28 @@ class GetBadmintonPlace:
         print(f"[{datetime.now()}] 未获取到符合条件的场次")
         return None
 
-    def sendReserveRequest(self, fieldId, targetDate, startTime, endTime, placeName):
+    def sendReserveRequest(self, sessionId, fieldId, targetDate, startTime, endTime, placeName):
         # 请求地址
         url = self.sendReserveRequestUrl
 
         # 动态获取 orderUseDate
         order_use_date = getAfterDayTimestamp()
-        # 未初始化sessionId
-        if(self.sessionId == ""):
-            sessionIdUnique = self.getUniqueSessionId(fieldId, targetDate, startTime, endTime, placeName)
-            # 未获取到sessionIdUnique 无法初始化
-            if sessionIdUnique is None:
-                error_response = Response()
-                error_response.status_code = 400
-                error_response._content = json.dumps({
-                    "code": "400",
-                    "error": "未获取到符合条件的场次",
-                    "fieldId": fieldId,
-                    "targetDate": targetDate,
-                    "startTime": startTime,
-                    "endTime": endTime,
-                    "placeName": placeName
-                }).encode('utf-8')
-                # print(error_response.json())
-                return error_response
 
-            # 获取到sessionIdUnique 进行初始化
-            self.sessionId = sessionIdUnique
+        # 未获取到sessionIdUnique 无法初始化
+        if sessionId == "":
+            error_response = Response()
+            error_response.status_code = 400
+            error_response._content = json.dumps({
+                "code": "400",
+                "error": "未获取到符合条件的场次",
+                "fieldId": fieldId,
+                "targetDate": targetDate,
+                "startTime": startTime,
+                "endTime": endTime,
+                "placeName": placeName
+            }).encode('utf-8')
+            # print(error_response.json())
+            return error_response
 
         fieldName =  "九里羽毛球1-6号" if fieldId == 1462312540799516672 else "犀浦室内羽毛球馆"
         # 请求体内容
@@ -106,7 +100,7 @@ class GetBadmintonPlace:
             "number": 2,
             "orderUseDate": order_use_date,  # 日期时间戳
             "requestsList": [{
-                "sessionsId": self.sessionId  # 场次id
+                "sessionsId": sessionId  # 场次id
             }],
             "fieldName": fieldName,
             "fieldId": fieldId,  # 场地id
