@@ -10,22 +10,28 @@ from getAfterDay import getAfterDay
 def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, token):
 
     print(f"[{datetime.now()}] 等待执行任务中...")
-    sessionId = ""
+    sessionIds = []
     def task1():
         print(f"[{datetime.now()}] 开始执行获取场次任务...")
 
-        nonlocal sessionId
+        nonlocal sessionIds
         badminton_place = GetBadmintonPlace(token)
-        sessionId = badminton_place.getUniqueSessionId(fieldId, targetDate, startTime, endTime, placeName)
+        sessionIds = badminton_place.getUniqueSessionId(fieldId, targetDate, startTime, endTime, placeName)
 
     def task2():
         print(f"[{datetime.now()}] 开始执行预定任务...")
 
-        nonlocal sessionId
+        nonlocal sessionIds
         badminton_place = GetBadmintonPlace(token)
         flag = False
-        for count in range(20):
-            response = badminton_place.sendReserveRequest(sessionId, fieldId, targetDate, startTime, endTime, placeName)
+
+        if not sessionIds:
+            print(f"[{datetime.now()}] 没有可用场次，预约失败。场地：{placeName}，时间：{targetDate} {startTime}-{endTime}")
+            sendNotice(f"预约失败：没有找到可用场次。场地：{placeName}，时间：{startTime}-{endTime}")
+            return
+
+        for count in range(10):
+            response = badminton_place.sendReserveRequest(sessionIds, fieldId, targetDate, startTime, endTime, placeName)
             # 取出回复里面的状态码
             response_json = response.json()
             response_code = response_json.get('code')
@@ -35,7 +41,7 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
                 print(f"[{datetime.now()}] 预约成功，等待付款。场地：{placeName}，时间：{targetDate} {startTime}-{endTime}")
                 break
             else:
-                print(f"[{datetime.now()}] 预约失败，正在进行第{count}次重试。场地：{placeName}，时间：{targetDate} {startTime}-{endTime}")
+                print(f"[{datetime.now()}] 预约失败，进行第{count}次重试。场地：{placeName}，时间：{targetDate} {startTime}-{endTime}")
 
             time.sleep(2)
 
@@ -98,15 +104,16 @@ if __name__ == "__main__":
     # 犀浦 1462412671863504896
     fieldId = 1462412671863504896
     targetDate = getAfterDay()
-    startTime = "20:00:00"
-    endTime = "21:00:00"
-    placeName = "5号羽毛球"
+    # 最多捅死预定相邻的2小时场次
+    startTime = "19:00:00"
+    endTime = "20:00:00"
+    placeName = "6号羽毛球"
     token = "$token$"
     # 抢星期几的场地，1代表周一，7代表周日
-    weekdays = [3, 4, 5, 6]
+    weekdays = [3, 4, 5, 6, 7]
 
     scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, token)
 
     while True:
         schedule.run_pending()
-        time.sleep(0.5)
+        time.sleep(0.2)
