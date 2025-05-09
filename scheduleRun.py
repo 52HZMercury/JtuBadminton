@@ -30,7 +30,7 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
             sendNotice(f"预约失败：没有找到可用场次。场地：{placeName}，时间：{startTime}-{endTime}")
             return
 
-        for count in range(10):
+        for count in range(15):
             response = badminton_place.sendReserveRequest(sessionIds, fieldId, targetDate, startTime, endTime, placeName)
             # 取出回复里面的状态码
             response_json = response.json()
@@ -47,9 +47,9 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
 
         # 推送消息
         if flag:
-            sendNotice(f"预约成功，等待付款。场地：{placeName}，时间：{startTime}-{endTime}")
+            sendNotice(f"预约成功，等待付款。场地：{placeName}，时间：{targetDate} {startTime}-{endTime}")
         else:
-            sendNotice(f"预约失败：{response}")
+            sendNotice(f"预约失败：{response_json}")
 
 
     # 调用 syncTime 计算时间差值
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     # 犀浦 1462412671863504896
     fieldId = 1462412671863504896
     targetDate = getAfterDay()
-    # 最多捅死预定相邻的2小时场次
+    # 最多同时预定相邻的2小时场次
     startTime = "19:00:00"
     endTime = "20:00:00"
     placeName = "6号羽毛球"
@@ -116,4 +116,4 @@ if __name__ == "__main__":
 
     while True:
         schedule.run_pending()
-        time.sleep(0.2)
+        time.sleep(0.1)

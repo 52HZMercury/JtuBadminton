@@ -74,19 +74,6 @@ class GetBadmintonPlace:
         print(f"[{datetime.now()}] 未获取到符合条件的场次")
         return []
 
-        # 遍历嵌套列表结构
-        # for outer_list in sessions_data:
-        #     for session in outer_list:
-        #         if (session.get("openDate") == targetDate and
-        #             session.get("openStartTime") == startTime and
-        #             session.get("openEndTime") == endTime and
-        #             session.get("placeName") == placeName and
-        #             session.get("sessionsStatus") == "NO_RESERVED"):
-        #             print(f"[{datetime.now()}] 获取到符合条件的场次:", session)
-        #             return session.get("id")
-
-        # print(f"[{datetime.now()}] 未获取到符合条件的场次")
-        # return None
 
     def sendReserveRequest(self, sessionIds, fieldId, targetDate, startTime, endTime, placeName):
         # 请求地址
