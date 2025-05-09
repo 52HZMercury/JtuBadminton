@@ -27,7 +27,7 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
 
         if not sessionIds:
             print(f"[{datetime.now()}] 没有可用场次，预约失败。场地：{placeName}，时间：{targetDate} {startTime}-{endTime}")
-            sendNotice(f"预约失败：没有找到可用场次。场地：{placeName}，时间：{startTime}-{endTime}")
+            sendNotice(f"预约失败：没有找到可用场次。场地：{placeName}，时间：{targetDate} {startTime}-{endTime}")
             return
 
         for count in range(15):
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     placeName = "6号羽毛球"
     token = "$token$"
     # 抢星期几的场地，1代表周一，7代表周日
-    weekdays = [3, 4, 5, 6, 7]
+    weekdays = [1, 3, 4, 7]
 
     scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, token)
 

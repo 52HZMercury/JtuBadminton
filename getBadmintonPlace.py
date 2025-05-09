@@ -1,6 +1,6 @@
 import requests
 from datetime import datetime
-from getAfterDay import getAfterDay, getAfterDayTimestamp
+from getAfterDay import getAfterDayTimestamp
 from requests.models import Response
 import json
 
