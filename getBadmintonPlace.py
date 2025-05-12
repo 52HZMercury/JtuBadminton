@@ -36,7 +36,7 @@ class GetBadmintonPlace:
         response = requests.post(url, json=payload, headers=headers, verify=False)
 
 
-        print(f"[{datetime.now()}] 获取全部场次, 状态码:", response.status_code)
+        print(f"[{datetime.now()}] 获取全部场次, 状态码: {response.status_code}", flush=True)
         # print("[Response Body]:", response.json())
         return response
 
@@ -64,14 +64,14 @@ class GetBadmintonPlace:
                     (session.get("openStartTime") == startTime or session.get("openEndTime") == endTime) and
                     session.get("placeName") == placeName and
                     session.get("sessionsStatus") == "NO_RESERVED"):
-                    print(f"[{datetime.now()}] 获取到符合条件的场次:", session)
+                    print(f"[{datetime.now()}] 获取到符合条件的场次: {session}", flush=True)
                     matching_sessions.append(session.get("id"))
 
         if matching_sessions:
-            print(f"[{datetime.now()}] 找到 {len(matching_sessions)} 个符合条件的场次")
+            print(f"[{datetime.now()}] 找到 {len(matching_sessions)} 个符合条件的场次", flush=True)
             return matching_sessions
 
-        print(f"[{datetime.now()}] 未获取到符合条件的场次")
+        print(f"[{datetime.now()}] 未获取到符合条件的场次", flush=True)
         return []
 
 
@@ -120,7 +120,7 @@ class GetBadmintonPlace:
         response = requests.post(url, json=payload, headers=headers, verify=False)
 
         # 打印响应状态码和内容
-        print(f"[{datetime.now()}] 预定指定场次，状态码:{response.status_code}, 预定信息:{response.json()}", )
+        print(f"[{datetime.now()}] 预定指定场次，状态码:{response.status_code}, 预定信息:{response.json()}", flush=True)
         return response
 
 
