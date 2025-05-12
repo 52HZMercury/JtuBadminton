@@ -1,6 +1,9 @@
 import requests
 from datetime import datetime, timedelta
 
+"""
+废弃，暂不使用
+"""
 def calculateTimeDiff(serverTime):
     """
     计算服务器时间与当前本地时间相差的秒数

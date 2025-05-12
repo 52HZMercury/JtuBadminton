@@ -13,24 +13,36 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
     sessionIds = []
     def task1():
         print(f"[{datetime.now()}] 开始执行获取场次任务...")
-
         nonlocal sessionIds
         badminton_place = GetBadmintonPlace(token)
         sessionIds = badminton_place.getUniqueSessionId(fieldId, targetDate, startTime, endTime, placeName)
 
     def task2():
         print(f"[{datetime.now()}] 开始执行预定任务...")
-
         nonlocal sessionIds
         badminton_place = GetBadmintonPlace(token)
+        # 首先选择的场地编号
+        number = int(placeName[0])
         flag = False
+        first_flag = True
 
-        if not sessionIds:
-            print(f"[{datetime.now()}] 没有可用场次，预约失败。场地：{placeName}，时间：{targetDate} {startTime}-{endTime}")
-            sendNotice(f"预约失败：没有找到可用场次。场地：{placeName}，时间：{targetDate} {startTime}-{endTime}")
-            return
+        # 有多少个场地，循环多少次
+        for count in range(9):
 
-        for count in range(15):
+            print(f"[{datetime.now()}] 进行第{count + 1}次尝试。场地: {number}号羽毛球，时间：{targetDate} {startTime}-{endTime}")
+
+            # 第一次尝试不执行, 第二次及以后的进行请求更新场次ID
+            if not first_flag:
+                sessionIds = badminton_place.getUniqueSessionId(
+                            fieldId, targetDate, startTime, endTime,
+                            f"{number}号羽毛球")
+            first_flag = False
+
+            if not sessionIds:
+                number = (number % 9) + 1
+                print(f"[{datetime.now()}] 没有可用场次，预约失败。")
+                continue
+
             response = badminton_place.sendReserveRequest(sessionIds, fieldId, targetDate, startTime, endTime, placeName)
             # 取出回复里面的状态码
             response_json = response.json()
@@ -38,29 +50,21 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
 
             if response.status_code == 200 and response_code == 200:
                 flag = True
-                print(f"[{datetime.now()}] 预约成功，等待付款。场地：{placeName}，时间：{targetDate} {startTime}-{endTime}")
+                print(f"[{datetime.now()}] 预约成功，等待付款。场地: {placeName}，时间：{targetDate} {startTime}-{endTime}")
                 break
             else:
-                print(f"[{datetime.now()}] 预约失败，进行第{count}次重试。场地：{placeName}，时间：{targetDate} {startTime}-{endTime}")
+                number = (number % 9) + 1
 
-            time.sleep(2)
+            time.sleep(20)
 
         # 推送消息
         if flag:
-            sendNotice(f"预约成功，等待付款。场地：{placeName}，时间：{targetDate} {startTime}-{endTime}")
+            sendNotice(f"预约成功，等待付款。场地：{number}号羽毛球，时间：{targetDate} {startTime}-{endTime}")
         else:
             sendNotice(f"预约失败：{response_json}")
 
 
-    # 调用 syncTime 计算时间差值
-    # serverTime = getServerTimeFromHeader()
-    # if serverTime:
-    #     timeDiff = calculateTimeDiff(serverTime)
-    #     print(f"[{datetime.now()}] 当前本地时间与服务器时间相差 {timeDiff} 秒")
-    #     # 将时间差值加到原定时间 22:30:00(服务器时间) 上
-    #     adjusted_time = (datetime.strptime("15:47:00", "%H:%M:%S") + timedelta(seconds=timeDiff)).strftime("%H:%M:%S")
-    #     print(f"[{datetime.now()}] 调整后的时间为 {adjusted_time}")
-
+    # 第一次尝试的获取场次任务提前五分钟进行，以压缩第一次发送预定时的时间
     id_time = (datetime.strptime("22:25:00", "%H:%M:%S") + timedelta(seconds=0)).strftime("%H:%M:%S")
     print(f"[{datetime.now()}] 获取场次任务调整后的时间为 {id_time}")
 
@@ -104,13 +108,21 @@ if __name__ == "__main__":
     # 犀浦 1462412671863504896
     fieldId = 1462412671863504896
     targetDate = getAfterDay()
+
     # 最多同时预定相邻的2小时场次
-    startTime = "19:00:00"
-    endTime = "20:00:00"
-    placeName = "6号羽毛球"
+    startTime = "20:00:00"
+    endTime = "21:00:00"
+
+    # 这个参数意思是首先选择9号,如果失败，会继续尝试1号，2号...
+    # 因为服务器不能短时间内(20秒)多次重试，因此第一次没成功，等20秒之后很大概率场地已经抢完
+    # 所以谨慎选择第一个尝试的场地
+    placeName = "9号羽毛球"
+
+    # 登录的token
     token = "$token$"
+
     # 抢星期几的场地，1代表周一，7代表周日
-    weekdays = [1, 3, 4, 7]
+    weekdays = [2, 4]
 
     scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, token)
 
