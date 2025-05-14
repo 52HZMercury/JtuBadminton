@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 # 提前几天
-delay = 1
+delay = 2
 
 """
 获取当前日期第三天毫秒时间戳（只保留日期部分）
