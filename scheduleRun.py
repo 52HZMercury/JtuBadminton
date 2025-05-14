@@ -13,6 +13,7 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
     def task1():
         print(f"[{datetime.now()}] 开始执行获取场次任务...", flush=True)
         nonlocal sessionIds
+        targetDate = getAfterDay()
         badminton_place = GetBadmintonPlace(token)
         sessionIds = badminton_place.getUniqueSessionId(fieldId, targetDate, startTime, endTime, placeName)
 
@@ -20,6 +21,7 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
         print(f"[{datetime.now()}] 开始执行预定任务...", flush=True)
         nonlocal sessionIds
         badminton_place = GetBadmintonPlace(token)
+        targetDate = getAfterDay()
         # 首先选择的场地编号
         number = int(placeName[0])
         flag = False
@@ -40,6 +42,7 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
             if not sessionIds:
                 number = (number % 9) + 1
                 print(f"[{datetime.now()}] 没有可用场次，预约失败。", flush=True)
+                time.sleep(1)
                 continue
 
             response = badminton_place.sendReserveRequest(sessionIds, fieldId, targetDate, startTime, endTime, placeName)
@@ -60,7 +63,7 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
         if flag:
             sendNotice(f"预约成功，等待付款。场地：{number}号羽毛球，时间：{targetDate} {startTime}-{endTime}")
         else:
-            sendNotice(f"预约失败：{response_json}")
+            sendNotice(f"预约失败，请查看日志！")
 
 
     # 第一次尝试的获取场次任务提前五分钟进行，以压缩第一次发送预定时的时间
@@ -106,22 +109,23 @@ if __name__ == "__main__":
     # 九里 1462312540799516672
     # 犀浦 1462412671863504896
     fieldId = 1462412671863504896
-    targetDate = getAfterDay()
+    # 不需要填写，执行任务时自动获取
+    targetDate = ""
 
     # 最多同时预定相邻的2小时场次
     startTime = "20:00:00"
     endTime = "21:00:00"
 
-    # 这个参数意思是首先选择9号,如果失败，会继续尝试1号，2号...
+    # 这个参数意思是首先选择8号,如果失败，会继续尝试9号，1号，2号...
     # 因为服务器不能短时间内(20秒)多次重试，因此第一次没成功，等20秒之后很大概率场地已经抢完
     # 所以谨慎选择第一个尝试的场地
-    placeName = "9号羽毛球"
+    placeName = "8号羽毛球"
 
     # 登录的token
     token = "$token$"
 
     # 抢星期几的场地，1代表周一，7代表周日
-    weekdays = [2, 4]
+    weekdays = [2, 4, 5, 6, 7]
 
     scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, token)
 
