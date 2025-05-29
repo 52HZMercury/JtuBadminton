@@ -67,10 +67,10 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
 
 
     # 第一次尝试的获取场次任务提前五分钟进行，以压缩第一次发送预定时的时间
-    id_time = (datetime.strptime("22:25:00", "%H:%M:%S") + timedelta(seconds=0)).strftime("%H:%M:%S")
+    id_time = (datetime.strptime("13:13:00", "%H:%M:%S") + timedelta(seconds=0)).strftime("%H:%M:%S")
     print(f"[{datetime.now()}] 获取场次任务调整后的时间为 {id_time}", flush=True)
 
-    reserve_time = (datetime.strptime("22:30:00", "%H:%M:%S") + timedelta(seconds=0)).strftime("%H:%M:%S")
+    reserve_time = (datetime.strptime("13:14:00", "%H:%M:%S") + timedelta(seconds=0)).strftime("%H:%M:%S")
     print(f"[{datetime.now()}] 预定场次任务调整后的时间为 {reserve_time}", flush=True)
 
     for weekday in weekdays:
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     token = "$token$"
 
     # 抢星期几的场地，1代表周一，7代表周日
-    weekdays = [2, 4, 5, 6, 7]
+    weekdays = [2, 3]
 
     scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, token)
 

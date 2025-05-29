@@ -57,6 +57,13 @@ class GetBadmintonPlace:
 
         sessions_data = response.json()
 
+        sessions_data = response.json()
+
+        # 检查返回是否为 token 过期
+        if isinstance(sessions_data, dict) and sessions_data.get("msg") == "{403}当前请求需要用户登录" and sessions_data.get("code") == 500:
+            print(f"[{datetime.now()}] token过期，需要重新登录", flush=True)
+            return []  # 提前返回空列表或其他错误处理逻辑
+
         # 遍历嵌套列表结构
         for outer_list in sessions_data:
             for session in outer_list:
