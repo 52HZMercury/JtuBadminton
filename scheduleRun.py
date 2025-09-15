@@ -6,10 +6,10 @@ from sendNotice import sendNotice
 from getAfterDay import getAfterDay
 
 
-def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, token):
-
+def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, token, push_token):
     print(f"[{datetime.now()}] 等待执行任务中...", flush=True)
     sessionIds = []
+
     def task1():
         print(f"[{datetime.now()}] 开始执行获取场次任务...", flush=True)
         nonlocal sessionIds
@@ -30,13 +30,15 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
         # 有多少个场地，循环多少次
         for count in range(9):
 
-            print(f"[{datetime.now()}] 进行第{count + 1}次尝试。场地: {number}号羽毛球，时间：{targetDate} {startTime}-{endTime}", flush=True)
+            print(
+                f"[{datetime.now()}] 进行第{count + 1}次尝试。场地: {number}号羽毛球，时间：{targetDate} {startTime}-{endTime}",
+                flush=True)
 
             # 第一次尝试不执行, 第二次及以后的进行请求更新场次ID
             if not first_flag:
                 sessionIds = badminton_place.getUniqueSessionId(
-                            fieldId, targetDate, startTime, endTime,
-                            f"{number}号羽毛球")
+                    fieldId, targetDate, startTime, endTime,
+                    f"{number}号羽毛球")
             first_flag = False
 
             if not sessionIds:
@@ -45,14 +47,16 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
                 time.sleep(1)
                 continue
 
-            response = badminton_place.sendReserveRequest(sessionIds, fieldId, targetDate, startTime, endTime, placeName)
+            response = badminton_place.sendReserveRequest(sessionIds, fieldId, targetDate, startTime, endTime,
+                                                          placeName)
             # 取出回复里面的状态码
             response_json = response.json()
             response_code = response_json.get('code')
 
             if response.status_code == 200 and response_code == 200:
                 flag = True
-                print(f"[{datetime.now()}] 预约成功，等待付款。场地: {placeName}，时间：{targetDate} {startTime}-{endTime}", flush=True)
+                print(f"[{datetime.now()}] 预约成功，等待付款。场地: {placeName}，时间：{targetDate} {startTime}-{endTime}",
+                      flush=True)
                 break
             else:
                 number = (number % 9) + 1
@@ -61,10 +65,9 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
 
         # 推送消息
         if flag:
-            sendNotice(f"预约成功，等待付款。场地：{number}号羽毛球，时间：{targetDate} {startTime}-{endTime}")
+            sendNotice(push_token, f"预约成功，等待付款。场地：{number}号羽毛球，时间：{targetDate} {startTime}-{endTime}")
         else:
-            sendNotice(f"预约失败，请查看日志！")
-
+            sendNotice(push_token, f"预约失败，请查看日志！")
 
     # 第一次尝试的获取场次任务提前五分钟进行，以压缩第一次发送预定时的时
     id_time = (datetime.strptime("22:25:00", "%H:%M:%S") + timedelta(seconds=0)).strftime("%H:%M:%S")
@@ -104,7 +107,6 @@ def scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, to
             weekday_mapping[weekday].at(reserve_time).do(task2)
 
 
-
 if __name__ == "__main__":
     # 九里 1462312540799516672
     # 犀浦 1462412671863504896
@@ -123,11 +125,13 @@ if __name__ == "__main__":
 
     # 登录的token
     token = "$token$"
+    # 发送消息的token
+    push_token = "$token$"
 
     # 抢星期几的场地，1代表周一，7代表周日
-    weekdays = [2, 3]
+    weekdays = [1, 2, 3, 4]
 
-    scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, token)
+    scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, token, push_token)
 
     while True:
         schedule.run_pending()
