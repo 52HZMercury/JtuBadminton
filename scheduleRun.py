@@ -129,7 +129,7 @@ if __name__ == "__main__":
     push_token = "$token$"
 
     # 抢星期几的场地，1代表周一，7代表周日
-    weekdays = [1, 2, 3, 4]
+    weekdays = [2, 4]
 
     scheduleRun(weekdays, fieldId, targetDate, startTime, endTime, placeName, token, push_token)
 
